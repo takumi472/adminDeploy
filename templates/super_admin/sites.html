@@ -1,0 +1,65 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header">新規サイト登録</div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">サイト名</label>
+                        <input type="text" name="name" class="form-control" placeholder="例: Takesato Japanese" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Cloudinary フォルダ</label>
+                        <input type="text" name="cloudinary_folder" class="form-control" placeholder="例: site1_folder">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">ドメイン</label>
+                        <input type="text" name="domain" class="form-control" placeholder="例: example.com">
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">サイトを作成</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <h3>登録済みサイト一覧</h3>
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>サイト名</th>
+                    <th>ドメイン</th>
+                    <th>ステータス</th>
+                    <th>アクション</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for site in sites %}
+                <tr>
+                    <td>{{ site.id }}</td>
+                    <td>{{ site.name }}</td>
+                    <td>{{ site.domain or '未設定' }}</td>
+                    <td>
+                        {% if site.latest_deployment_id %}
+                        <span class="badge bg-info">デプロイ済み</span>
+                        {% else %}
+                        <span class="badge bg-secondary">未デプロイ</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form action="{{ url_for('super_admin.deploy_site', site_id=site.id) }}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn btn-sm btn-primary">Vercelへデプロイ</button>
+                        </form>
+                        {% if site.deployment_url %}
+                        <a href="https://{{ site.deployment_url }}" target="_blank" class="btn btn-sm btn-outline-secondary">表示</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
