@@ -1,82 +1,136 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="row">
-    <div class="col-md-4">
-        <div class="card mb-4 shadow-sm">
-            <div class="card-header">新規サイト登録</div>
-            <div class="card-body">
-                <form method="POST">
-                    <div class="mb-3">
-                        <label class="form-label">サイト名</label>
-                        <input type="text" name="name" class="form-control" placeholder="例: Takesato Japanese" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Cloudinary フォルダ</label>
-                        <input type="text" name="cloudinary_folder" class="form-control" placeholder="例: site1_folder">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">ドメイン</label>
-                        <input type="text" name="domain" class="form-control" placeholder="例: example.com">
-                    </div>
-                    <button type="submit" class="btn btn-success w-100">サイトを作成</button>
-                </form>
+<div class="container">
+    {% if current_user.role =="super_admin" %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">新規サイト登録</div>
+                <div class="card-body">
+                    <form method="POST" class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">サイト名</label>
+                            <input type="text" name="name" pattern="[a-z\s]+" title="小文字のアルファベットとスペースのみ入力可能です" class="form-control" placeholder="例: takesato japanese" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Cloudinary フォルダ</label>
+                            <input type="text" name="cloudinary_folder" class="form-control" placeholder="例: site1_folder">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">ドメイン</label>
+                            <input type="text" name="domain" class="form-control" placeholder="例: example.com">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-success w-100">サイトを作成</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-8">
-        <h3>登録済みサイト一覧</h3>
-        <table class="table table-striped align-middle">
-            <tbody>
-                {% for site in sites %}
-                <tr>
-                    <td>{{ site.id }}</td>
-                    <td>{{ site.name }}</td>
-                    <td>{{ site.domain or '未設定' }}</td>
-                    <td>
-                        {% if site.latest_deployment_id %}
-                        <span class="badge bg-info">デプロイ済み</span>
-                        {% else %}
-                        <span class="badge bg-secondary">未デプロイ</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <form action="{{ url_for('super_admin.deploy_site', site_id=site.id) }}" 
-                              method="POST" 
-                              style="display:inline;"
-                              onsubmit="handleDeploy(this)">
-                            <button type="submit" class="btn btn-sm btn-primary">
-                                <span class="btn-text">Vercelへデプロイ</span>
-                            </button>
-                        </form>
-                        {% if site.deployment_url %}
-                        <a href="https://{{ site.deployment_url }}" target="_blank" class="btn btn-sm btn-outline-secondary">表示</a>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-12">
+            <h3 class="mb-3">登録済みサイト一覧</h3>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle border">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>サイト名</th>
+                            <th>ドメイン</th>
+                            <th>状態</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for site in sites %}
+                        <tr>
+                            <td>{{ site.id }}</td>
+                            <td class="text-nowrap">{{ site.name }}</td>
+                            <td>{{ site.domain or '未設定' }}</td>
+                            <td id="status-cell-{{ site.id }}">
+                                {% if site.latest_deployment_id %}
+                                    <span class="badge bg-success status-badge">デプロイ完了</span>
+                                    <small class="d-block text-muted step-text">Step 6</small>
+                                {% else %}
+                                    <span class="badge bg-secondary status-badge">未設定</span>
+                                    <small class="d-block text-muted step-text"></small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <form action="{{ url_for('super_admin.deploy_site', site_id=site.id) }}" 
+                                          method="POST" 
+                                          onsubmit="handleDeploy(this)">
+                                        <button type="submit" class="btn btn-sm btn-primary">
+                                            <span class="btn-text">デプロイ</span>
+                                        </button>
+                                    </form>
+                                    {% if site.deployment_url %}
+                                    <a href="https://{{ site.deployment_url }}" target="_blank" class="btn btn-sm btn-outline-secondary">表示</a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
+
 <style>
-    /* 無効化されたボタンの見た目を調整 */
-    button:disabled {
-        cursor: not-allowed;
-        opacity: 0.7;
+    /* 小さな画面での操作性向上 */
+    @media (max-width: 768px) {
+        .btn-text { display: none; } /* スマホではアイコンのみにするなどの調整用 */
     }
 </style>
 
 <script>
 function handleDeploy(formElement) {
     const btn = formElement.querySelector('button');
-    const btnText = btn.querySelector('.btn-text');
-    
-    // ボタンを無効化
     btn.disabled = true;
-    // 表記を変更
-    btnText.textContent = 'デプロイ中...';
-    // Bootstrapのスピナーを追加（任意）
-    btn.insertAdjacentHTML('afterbegin', '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>');
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> デプロイ中...';
 }
+
+function updateStatuses() {
+    fetch('/super-admin/sites/deployment-statuses')
+.then(response => response.json())
+        .then(data => {
+            let allCompleted = true; // 全サイトが完了したか判定するフラグ
+
+            for (const [siteId, info] of Object.entries(data)) {
+                const cell = document.getElementById(`status-cell-${siteId}`);
+                if (!cell) continue;
+
+                const badge = cell.querySelector('.status-badge');
+                const stepText = cell.querySelector('.step-text');
+
+                badge.textContent = info.status;
+                badge.className = 'badge status-badge ' + 
+                    (info.status === 'デプロイ完了' ? 'bg-success' : 'bg-warning text-dark');
+                
+                stepText.textContent = info.step;
+
+                // もし「実行中」のステータスがあれば、まだ完了していないとみなす
+                if (info.status !== 'デプロイ完了') {
+                    allCompleted = false;
+                }
+            }
+
+            // すべての処理が終了（SUCCESSまたはFAILED）したら停止
+            if (allCompleted) {
+                clearInterval(statusInterval);
+                console.log("すべてのデプロイが完了したため、更新を停止しました。");
+            }
+        })
+        .catch(error => console.error("ステータス取得エラー:", error));
+}
+
+// 3秒ごとに更新を開始し、IDを保持
+statusInterval = setInterval(updateStatuses, 3000);
 </script>
 {% endblock %}

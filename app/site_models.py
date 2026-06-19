@@ -17,15 +17,21 @@ class User(db.Model, UserMixin):
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=True, nullable=False)  # ログインID（メールアドレス）
+    username = db.Column(
+        db.String(50), unique=True, nullable=False
+    )  # ログインID（メールアドレス）
     password_hash = db.Column(db.String(256), nullable=False)  # ハッシュ化パスワード
     role = db.Column(db.String(20), nullable=False)  # 'admin' または 'staff'
     name = db.Column(db.String(50), nullable=False)  # 氏名
 
     # スタッフが記入した学習記録（1対多）
     # ※LearningRecord側の 'writer_staff' バックレフと自動接続されます
-    records_written = db.relationship("LearningRecord", backref="writer_staff", foreign_keys="LearningRecord.staff_id")
-    staff_profile = db.relationship("Staff", backref="user", uselist=False, cascade="all, delete-orphan")
+    records_written = db.relationship(
+        "LearningRecord", backref="writer_staff", foreign_keys="LearningRecord.staff_id"
+    )
+    staff_profile = db.relationship(
+        "Staff", backref="user", uselist=False, cascade="all, delete-orphan"
+    )
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -38,7 +44,9 @@ class Staff(db.Model):
     __tablename__ = "staffs"
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id = db.Column(
+        db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
     face_photo_path = db.Column(db.String(255), nullable=True)
 
     # プロフィール詳細項目
@@ -85,35 +93,42 @@ class Student(db.Model):
 
     # 生徒に紐づく学習記録（1対多）
     # ※LearningRecord側の 'student' バックレフと自動接続されます。cascadeにより生徒削除時に記録も消えます。
-    learning_records = db.relationship("LearningRecord", backref="student", cascade="all, delete-orphan")
+    learning_records = db.relationship(
+        "LearningRecord", backref="student", cascade="all, delete-orphan"
+    )
 
 
 class LearningRecord(db.Model):
-    __tablename__ = 'learning_records'
+    __tablename__ = "learning_records"
     id = db.Column(db.Integer, primary_key=True)
-    student_id = db.Column(db.Integer, db.ForeignKey('students.id', ondelete='CASCADE'), nullable=False) 
-    staff_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    
+    student_id = db.Column(
+        db.Integer, db.ForeignKey("students.id", ondelete="CASCADE"), nullable=False
+    )
+    staff_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+
     # 画像の項目に対応
-    lesson_date = db.Column(db.Date, default=datetime.utcnow) # レッスン日
-    textbook_progress = db.Column(db.String(50))              # 第〇回目（選択式）
-    today_learning_content = db.Column(db.Text)               # 学習内容（一般）
+    lesson_date = db.Column(db.Date, default=datetime.utcnow)  # レッスン日
+    textbook_progress = db.Column(db.String(50))  # 第〇回目（選択式）
+    today_learning_content = db.Column(db.Text)  # 学習内容（一般）
     recorded_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
 class Meeting(db.Model):
-    __tablename__ = 'meetings'
+    __tablename__ = "meetings"
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(200), nullable=False) # ミーティングタイトル
+    title = db.Column(db.String(200), nullable=False)  # ミーティングタイトル
     date = db.Column(db.Date, nullable=False)
     pdf_path = db.Column(db.String(255), nullable=True)
-    content = db.Column(db.Text, nullable=False)      # 議事録内容
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id')) # 作成者
-    attachments = db.relationship('Attachment', backref='meeting', lazy=True, cascade="all, delete-orphan")
+    content = db.Column(db.Text, nullable=False)  # 議事録内容
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id"))  # 作成者
+    attachments = db.relationship(
+        "Attachment", backref="meeting", lazy=True, cascade="all, delete-orphan"
+    )
+
 
 class Attachment(db.Model):
-    __tablename__ = 'attachments'
+    __tablename__ = "attachments"
     id = db.Column(db.Integer, primary_key=True)
-    filename = db.Column(db.String(255), nullable=False) # 保存時のファイル名
-    original_name = db.Column(db.String(255), nullable=False) # 元のファイル名
-    meeting_id = db.Column(db.Integer, db.ForeignKey('meetings.id'), nullable=False)
+    filename = db.Column(db.String(255), nullable=False)  # 保存時のファイル名
+    original_name = db.Column(db.String(255), nullable=False)  # 元のファイル名
+    meeting_id = db.Column(db.Integer, db.ForeignKey("meetings.id"), nullable=False)
