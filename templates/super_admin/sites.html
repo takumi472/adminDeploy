@@ -26,15 +26,6 @@
     <div class="col-md-8">
         <h3>登録済みサイト一覧</h3>
         <table class="table table-striped align-middle">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>サイト名</th>
-                    <th>ドメイン</th>
-                    <th>ステータス</th>
-                    <th>アクション</th>
-                </tr>
-            </thead>
             <tbody>
                 {% for site in sites %}
                 <tr>
@@ -49,8 +40,13 @@
                         {% endif %}
                     </td>
                     <td>
-                        <form action="{{ url_for('super_admin.deploy_site', site_id=site.id) }}" method="POST" style="display:inline;">
-                            <button type="submit" class="btn btn-sm btn-primary">Vercelへデプロイ</button>
+                        <form action="{{ url_for('super_admin.deploy_site', site_id=site.id) }}" 
+                              method="POST" 
+                              style="display:inline;"
+                              onsubmit="handleDeploy(this)">
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <span class="btn-text">Vercelへデプロイ</span>
+                            </button>
                         </form>
                         {% if site.deployment_url %}
                         <a href="https://{{ site.deployment_url }}" target="_blank" class="btn btn-sm btn-outline-secondary">表示</a>
@@ -62,4 +58,25 @@
         </table>
     </div>
 </div>
+<style>
+    /* 無効化されたボタンの見た目を調整 */
+    button:disabled {
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+</style>
+
+<script>
+function handleDeploy(formElement) {
+    const btn = formElement.querySelector('button');
+    const btnText = btn.querySelector('.btn-text');
+    
+    // ボタンを無効化
+    btn.disabled = true;
+    // 表記を変更
+    btnText.textContent = 'デプロイ中...';
+    // Bootstrapのスピナーを追加（任意）
+    btn.insertAdjacentHTML('afterbegin', '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>');
+}
+</script>
 {% endblock %}
